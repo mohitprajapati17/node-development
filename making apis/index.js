@@ -1,5 +1,6 @@
 const data=require("./mockdata.json");
 const express=require("express");
+const mongoose=require("mongoose");
 
 const app=express();
 const fs=require("fs");
@@ -7,35 +8,65 @@ const fs=require("fs");
 const users=require("./mockdata.json");
 app.use(express.urlencoded({extended:true}));
 
+
+
 // Middleware to parse JSON request bodies
 app.use(express.json());
 
-app.get("/data",(req,res)=>{
-    res.send(data);
+// connect to mongodb
+mongoose.connect("mongodb://127.0.0.1:27017/users")
+.then(()=>{console.log("connected to mongodb")}).catch((err)=>{console.log(err)});
+
+const userSchema=new mongoose.Schema({
+    first_name:{
+        type:String,
+        required:true,
+    },
+    last_name:{
+        type:String,
+        required:true,
+    },
+    email:{
+        required:true,
+        unique:true,
+        type:String,
+    },
+    gender:{
+        type:String,
+        
+
+    },
+
+});
+
+const User =mongoose.model("user",userSchema);
+
+app.get("/data",async(req,res)=>{
+    const result=await User.find();
+    res.status(200).json(result);
 })
 
-app.get("/data/:id",(req,res)=>{
+app.get("/data/:id",async(req,res)=>{
     const id=req.params.id;
-    const user=data.find((user)=>user.id===parseInt(id));
-    res.send(user);
+    const result=await User.findById(id);
+    res.status(200).json(result);
 })
 
-app.post("/data",(req,res)=>{
+app.post("/data",async(req,res)=>{
     const body=req.body;
-    users.push({...body ,id:data.length+1});
-    fs.writeFile("./mockdata.json",JSON.stringify(users),(err,data)=>{
-        return  res.json({"id ":users.length});
-    })
+   
+    const result=await User.create(body);
+    console.log(result);
+    res.status(201).json(result);
+
 
 })
 
-app.patch("/data/:id",(req,res)=>{
+app.patch("/data/:id",async(req,res)=>{
     const id=req.params.id;
     const body=req.body;
-    const x=users.map((user)=>user.id===parseInt(id)?{...body,id:id}:user);
-    fs.writeFile("./mockdata.json",JSON.stringify(x),(err,data)=>{
-        return res.json({"message":"User updated successfully"});
-    })
+    const result =await User.findByIdAndUpdate(id,body,{new:true});
+    res.status(200).json(result);
 })
 
 
