@@ -13,9 +13,9 @@ async function handleLogin(req,res){
     const user=await User.findOne({email});
     if(!user) return res.status(400).json({error: "User not found"});
     const isMatch=user.password===password;
-    const sessionId=uuidv4();
-    setUser(user,sessionId);
-    res.cookie("uid",sessionId);
+    const token=setUser(user);
+
+    res.cookie("uid",token);
     if(!isMatch) return res.status(400).json({error: "Invalid password"});
     return res.status(200).json({message: "Login successful"});
 }
