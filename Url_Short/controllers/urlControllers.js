@@ -9,13 +9,15 @@ async function handleCreateShortUrl(req,res){
     if(!body.url) return res.status(400).json({error: "url is required"});
     const shortId=shortid();
     await Url.create({
-        url:body.url,
+        url:shortId,
         redirectUrl:body.url,
         visitHistory:[]
     })
     return res.json({id:shortId});
 
 }
+
+
 
 
 module.exports={handleCreateShortUrl};
